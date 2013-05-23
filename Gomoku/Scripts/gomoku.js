@@ -1,6 +1,6 @@
 ﻿
 //asdasdd
-
+//new line
 
 var Gomoku = function (boardSize, containerId) {
     var self = this;

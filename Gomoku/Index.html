@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Gomoku game</title>
+    <meta charset="utf-8"/>
+    <script src="Scripts/jquery-2.0.0.js"></script>
+    <script src="Scripts/gomoku.js"></script>
+    <link type="text/css" rel="stylesheet" href="Content/gomoku.css"/>
+    <script>
+        var gomoku;
+        
+        $(function () {
+            gomoku = new Gomoku(600, 'content');
+
+            $('#undo').click(function() {
+                gomoku.undo();
+            });
+            $('#analyseForward').click(function () {
+                gomoku.analyse(true);
+            });
+            $('#analyseBack').click(function () {
+                gomoku.analyse(false);
+            });
+            $('#showAll').click(function () {
+                gomoku.show(false);
+            });
+            $('#newGame').click(function () {
+                gomoku.newGame();
+            });
+        });
+
+    </script>
+</head>
+    <body>
+        <div id="content">
+            <input id="undo" type="button" value="Undo"/>
+            <input id="newGame" type="button" value="New Game"/>
+            <input id="analyseForward" type="button" value="Analyse Forward"/>
+            <input id="analyseBack" type="button" value="Analyse Back"/>
+            <input id="showAll" type="button" value="Show All"/>
+        </div>
+        <div id="log"></div>
+    </body>
+</html>

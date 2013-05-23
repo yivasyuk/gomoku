@@ -1,5 +1,5 @@
 ﻿
-//
+//asdasdd
 
 var Gomoku = function (boardSize, containerId) {
     var self = this;

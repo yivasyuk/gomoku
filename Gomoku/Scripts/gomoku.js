@@ -1,23 +1,45 @@
-﻿
-//asdasdd
-//new line
-
-var Gomoku = function (boardSize, containerId) {
+﻿var Gomoku = function (boardSize, containerId) {
     var self = this;
+    
+    if (!boardSize)
+        boardSize = 600;
+    
+    ///default settings (single contructor parameter)
+    /*settings = {
+        boardSize: 15,
+        containerId: 'body',
+        professionalRules: true
+    }
+    */
+    var settings = {};
 
+    if ($.isPlainObject(boardSize)) {
+        settings = boardSize;
+
+        boardSize = settings.boardSize;
+        containerId = settings.containerId;
+    }
+    
     this.lineColor = '#40353B';
     this.borderColor = '#40353B';
-    this.backGroundColor = '#f9f7f0';//'#f3f0e7';
+    this.backGroundColor = '#f9f7f0';
     this.highlightColor = '#ced1d4';
-    
+    this.highlightRestrictedColor = '#e9a5a7';
+
     this.blackFigureStopColor1 = '#dcdee0';
     this.blackFigureStopColor2 = '#0b101d';
     this.blackHighlightedFigureStopColor2 = '#8e251a';
-    
+
     this.whiteFigureStopColor1 = '#ffffff';
     this.whiteFigureStopColor2 = '#94a1ad';
     this.whiteHighlightedFigureStopColor2 = '#e87064';
-
+    
+    
+    
+    this.getSettingsValue = function (value, defaultValue) {
+        return value == undefined || value == null ? defaultValue : value;
+    };
+    
     var BoardCell = function (left, top, size, indexX, indexY) {
         this.left = left;
         this.top = top;
@@ -75,7 +97,7 @@ var Gomoku = function (boardSize, containerId) {
         };
 
         this.highlight = function () {
-            self.ctx.fillStyle = self.highlightColor;
+            self.ctx.fillStyle = !this.isRestricted ? self.highlightColor : self.highlightRestrictedColor;
             self.ctx.fillRect(this.left, this.top, this.size, this.size);
         };
     };
@@ -91,7 +113,7 @@ var Gomoku = function (boardSize, containerId) {
     this.moves = new Array();
     this.gameOver = false;
     this.highlightedCell = null;
-    this.professionalRules = true;
+    this.professionalRules = this.getSettingsValue(settings.professionalRules, true);
 
     this.init = function () {
         var $container = this.containerId ? $('#' + this.containerId) : $('body');
@@ -133,8 +155,7 @@ var Gomoku = function (boardSize, containerId) {
                 self.highlightedCell.clear();
 
             var boardCell = self.findBoardCell(event.pageX - self.$board.position().left, event.pageY - self.$board.position().top);
-            self.log(boardCell.isRestricted);
-            if (boardCell && boardCell.isEmpty() && !boardCell.isRestricted) {
+            if (boardCell && boardCell.isEmpty()) {
                 boardCell.highlight();
                 self.highlightedCell = boardCell;
             }
@@ -244,6 +265,9 @@ var Gomoku = function (boardSize, containerId) {
         this.clearBoard();
         this.moves = new Array();
         this.gameOver = false;
+        
+        if (this.professionalRules)
+            this.move(this.board[7][7]);
     };
 
     this.isBlackMove = function () { return this.moves.length % 2 == 0; };
@@ -335,6 +359,11 @@ var Gomoku = function (boardSize, containerId) {
         }
     };
 
+    this.refresh = function() {
+        this.clearBoard();
+        this.show();
+    };
+
     this.showFullScreen = function () {
         var domBoard = this.$board[0];
 
@@ -356,4 +385,6 @@ var Gomoku = function (boardSize, containerId) {
     };
 
     this.init();
+
+    this.newGame();
 };

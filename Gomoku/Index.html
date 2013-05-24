@@ -2,17 +2,27 @@
 <html>
 <head>
     <title>Gomoku game</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <script src="Scripts/jquery-2.0.0.js"></script>
+    <!--    <script src="Scripts/jquery-ui-1.10.2.js"></script>-->
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     <script src="Scripts/gomoku.js"></script>
-    <link type="text/css" rel="stylesheet" href="Content/gomoku.css"/>
+    <!--    <link type="text/css" rel="stylesheet" href="Content/themes/base/jquery.ui.dialog.css" />-->
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+    <link type="text/css" rel="stylesheet" href="Content/gomoku.css" />
     <script>
         var gomoku;
-        
-        $(function () {
-            gomoku = new Gomoku(600, 'content');
 
-            $('#undo').click(function() {
+        $(function () {
+            //gomoku = new Gomoku();
+            //or gomoku = new Gomoku(600, 'content');
+            //or with settings
+            gomoku = new Gomoku({
+                boardSize: 600,
+                containerId: 'content'
+            });
+
+            $('#undo').click(function () {
                 gomoku.undo();
             });
             $('#analyseForward').click(function () {
@@ -26,19 +36,57 @@
             });
             $('#newGame').click(function () {
                 gomoku.newGame();
+
+                //$("#dialog-form").dialog("open");
+            });
+
+
+            $("#dialog-form").dialog({
+                autoOpen: false,
+                height: 300,
+                width: 350,
+                modal: true,
+                show: {
+                    effect: "blind",
+                    duration: 1000
+                },
+                hide: {
+                    effect: "explode",
+                    duration: 1000
+                },
+                buttons: {
+                    "Create an account": function () {
+                        alert(1);
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                    }
+                },
+                close: function () {
+                }
             });
         });
 
     </script>
 </head>
-    <body>
-        <div id="content">
-            <input id="undo" type="button" value="Undo"/>
-            <input id="newGame" type="button" value="New Game"/>
-            <input id="analyseForward" type="button" value="Analyse Forward"/>
-            <input id="analyseBack" type="button" value="Analyse Back"/>
-            <input id="showAll" type="button" value="Show All"/>
+<body>
+    <div id="content">
+        <div>
+            <input id="undo" type="button" value="Undo" />
+            <input id="newGame" type="button" value="New Game" />
+            <input id="analyseForward" type="button" value="Analyse Forward" />
+            <input id="analyseBack" type="button" value="Analyse Back" />
+            <input id="showAll" type="button" value="Show All" />
         </div>
-        <div id="log"></div>
-    </body>
+    </div>
+
+    <div id="dialog-form" title="Settings">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+    </div>
+
+
+
+    <div id="log"></div>
+</body>
 </html>

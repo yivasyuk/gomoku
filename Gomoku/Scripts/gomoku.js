@@ -1,25 +1,28 @@
-﻿var Gomoku = function (boardSize, containerId) {
+﻿///Requires jquery nad jquery.cookie libraries
+
+var Gomoku = function (boardSize, containerId) {
     var self = this;
-    
+
     if (!boardSize)
         boardSize = 600;
-    
+
     ///default settings (single contructor parameter)
     /*settings = {
         boardSize: 15,
         containerId: 'body',
-        professionalRules: true
+        professionalRules: true,
+        saveState: true
     }
     */
-    var settings = {};
+    this.settings = {};
 
     if ($.isPlainObject(boardSize)) {
-        settings = boardSize;
+        this.settings = boardSize;
 
-        boardSize = settings.boardSize;
-        containerId = settings.containerId;
+        boardSize = this.settings.boardSize;
+        containerId = this.settings.containerId;
     }
-    
+
     this.lineColor = '#40353B';
     this.borderColor = '#40353B';
     this.backGroundColor = '#f9f7f0';
@@ -33,13 +36,7 @@
     this.whiteFigureStopColor1 = '#ffffff';
     this.whiteFigureStopColor2 = '#94a1ad';
     this.whiteHighlightedFigureStopColor2 = '#e87064';
-    
-    
-    
-    this.getSettingsValue = function (value, defaultValue) {
-        return value == undefined || value == null ? defaultValue : value;
-    };
-    
+
     var BoardCell = function (left, top, size, indexX, indexY) {
         this.left = left;
         this.top = top;
@@ -54,7 +51,7 @@
 
         this.draw = function (isBlack, highlighted) {
             this.clear();
-            
+
             if (isBlack != undefined)
                 this.isBlack = isBlack;
             if (highlighted == undefined)
@@ -73,7 +70,7 @@
                 stopColor1 = self.whiteFigureStopColor1;
                 stopColor2 = !highlighted ? self.whiteFigureStopColor2 : self.whiteHighlightedFigureStopColor2;
             }
-            
+
             var gradient = self.ctx.createRadialGradient(circleX, circleY, 0, circleX, circleY, radius / 1.1);
             gradient.addColorStop(0, stopColor1);
             gradient.addColorStop(1, stopColor2);
@@ -108,14 +105,54 @@
     this.ctx = null;
     this.cells = 15;
     this.lineWidth = 2;
-    this.cellSize = (this.boardSize - (this.cells - 1) * this.lineWidth) / this.cells;
+    this.cellSize = null;
     this.board = null;
     this.moves = new Array();
     this.gameOver = false;
     this.highlightedCell = null;
-    this.professionalRules = this.getSettingsValue(settings.professionalRules, true);
+    this.storedMoves = null;
+
+    this.saveState = function () {
+        if (!this.settings.saveState)
+            return;
+        
+        var storedMoves = new Array();
+        $(this.moves).each(function (index, boardCell) {
+            storedMoves.push({ x: boardCell.indexX, y: boardCell.indexY });
+        });
+
+        $.cookie('gomoku',
+            {
+                settings: this.settings,
+                moves: storedMoves
+            }, { expires: 30 });
+    };
+
+    this.loadState = function () {
+        var state = $.cookie('gomoku');
+        if (!state)
+            return;
+
+        if (state.settings)
+            this.settings = state.settings;
+
+        if (state.moves)
+            this.storedMoves = state.moves;
+    };
+
+    this.getSettingsValue = function (value, defaultValue) {
+        return value == undefined || value == null ? defaultValue : value;
+    };
 
     this.init = function () {
+        $.cookie.json = true;
+
+        this.loadState();
+        this.settings.professionalRules = this.getSettingsValue(this.settings.professionalRules, true);
+        this.settings.saveState = this.getSettingsValue(this.settings.saveState, true);
+
+        this.cellSize = (this.boardSize - (this.cells - 1) * this.lineWidth) / this.cells;
+
         var $container = this.containerId ? $('#' + this.containerId) : $('body');
         $container.append('<canvas id="gomokuBoard" width="' + this.boardSize + '" height="' + this.boardSize + '"></canvas>');
         this.$board = $('#gomokuBoard');
@@ -140,10 +177,6 @@
             }
             offsetX += this.cellSize + this.lineWidth;
         }
-
-//        this.board[2][3].draw(1);
-//        this.board[3][3].draw(2);
-
 
         this.$board.click(function (event) {
             var boardCell = self.findBoardCell(event.pageX - self.$board.position().left, event.pageY - self.$board.position().top);
@@ -208,11 +241,12 @@
 
         boardCell.draw(this.isBlackMove());
         this.moves.push(boardCell);
-        
-        if (this.professionalRules && (this.moves.length == 2 || this.moves.length == 3))
-            this.toggleRestrictedBoardCells();
-            
+
+        this.toggleRestrictedBoardCells();
+
         this.gameOver = this.checkWin();
+        if (this.settings.saveState)
+            this.saveState();
     };
 
     this.analyse = function (forward) {
@@ -249,6 +283,9 @@
     };
 
     this.toggleRestrictedBoardCells = function () {
+        if (!this.settings.professionalRules || this.moves.length != 2 && this.moves.length != 3)
+            return;
+
         var firstBlackBoardCell = this.moves[0];
         if (!firstBlackBoardCell)
             return;
@@ -265,9 +302,11 @@
         this.clearBoard();
         this.moves = new Array();
         this.gameOver = false;
-        
-        if (this.professionalRules)
+
+        if (this.settings.professionalRules)
             this.move(this.board[7][7]);
+
+        this.saveState();
     };
 
     this.isBlackMove = function () { return this.moves.length % 2 == 0; };
@@ -359,7 +398,25 @@
         }
     };
 
-    this.refresh = function() {
+    this.restoreState = function() {
+        if (this.storedMoves) {
+            this.clearBoard();
+            this.moves = new Array();
+            
+            $(this.storedMoves).each(function (index, move) {
+                if (self.board[move.x] && self.board[move.x][move.y]) {
+                    var boardCell = self.board[move.x][move.y];
+                    boardCell.draw(self.isBlackMove());
+                    self.moves.push(boardCell);
+                    self.toggleRestrictedBoardCells();
+                }
+            });
+            this.gameOver = this.checkWin();
+        }
+        this.saveState();
+    };
+    
+    this.refresh = function () {
         this.clearBoard();
         this.show();
     };
@@ -387,4 +444,6 @@
     this.init();
 
     this.newGame();
+
+    this.restoreState();
 };

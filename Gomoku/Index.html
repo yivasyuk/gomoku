@@ -37,12 +37,16 @@
             });
             $('#newGame').click(function () {
                 gomoku.newGame();
-
-                
             });
             $('#saveSettings').click(function () {
-                gomoku.log($.cookie('the_cookie'));
-                $.cookie('the_cookie', 'the_value');
+                var cookie = $.cookie('the_cookie');
+                gomoku.log(cookie.a);
+                
+                $.cookie('the_cookie',
+                    {
+                        a: 1
+                    }
+                    , { expires: 30 });
             });
             //$("#dialog-form").dialog("open");
             
